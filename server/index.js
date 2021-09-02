@@ -1,6 +1,7 @@
 const SpotifyWebApi = require("spotify-web-api-node");
 require("dotenv").config();
 const express = require("express");
+var cors = require("cors");
 
 const scopes = [
   "ugc-image-upload",
@@ -25,11 +26,14 @@ const scopes = [
 ];
 
 const app = express();
+app.use(cors());
 const spotifyApi = new SpotifyWebApi({
   redirectUri: "http://localhost:5000/callback",
   clientId: process.env.clientId,
   clientSecret: process.env.clientSecret,
 });
+
+
 
 app.get("/login", (req, res) => {
   res.redirect(spotifyApi.createAuthorizeURL(scopes));
@@ -41,7 +45,8 @@ app.get("/callback", (req, res) => {
     res.json("Error");
     return;
   }
-  spotifyApi.authorizationCodeGrant(code)
+  spotifyApi
+    .authorizationCodeGrant(code)
     .then((data) => {
       const access_token = data.body["access_token"];
       const refresh_token = data.body["refresh_token"];
@@ -56,7 +61,7 @@ app.get("/callback", (req, res) => {
       console.log(
         `Sucessfully retreived access token. Expires in ${expires_in} s.`
       );
-      res.json({message: "Success! You can now close the window."});
+      res.json({ message: "Success! You can now close the window." });
 
       setInterval(async () => {
         const data = await spotifyApi.refreshAccessToken();
